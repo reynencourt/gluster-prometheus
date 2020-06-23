@@ -111,3 +111,7 @@ gen-version:
 metrics-docgen: $(EXPORTER_BIN)
 	mkdir -p docs
 	./build/gluster-exporter --docgen > docs/metrics.adoc
+
+release-tag:
+	git tag `cat .version`
+	git push --tags

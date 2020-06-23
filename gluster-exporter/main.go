@@ -39,17 +39,6 @@ var (
 	clusterID string
 )
 
-type glusterMetric struct {
-	name string
-	fn   func(glusterutils.GInterface) error
-}
-
-var glusterMetrics []glusterMetric
-
-func registerMetric(name string, fn func(glusterutils.GInterface) error) {
-	glusterMetrics = append(glusterMetrics, glusterMetric{name: name, fn: fn})
-}
-
 func dumpVersionInfo() {
 	fmt.Printf("version   : %s\n", exporterVersion)
 	fmt.Printf("go version: %s\n", runtime.Version())
