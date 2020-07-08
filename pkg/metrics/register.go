@@ -30,7 +30,7 @@ func getDefaultGlusterdDir(mgmt string) string {
 	return defaultGlusterd1Workdir
 }
 
-func InitGluterMetrics(configPath string, metrics []string) error {
+func InitGluterMetrics(clusterLabel string, configPath string, metrics []string) error {
 	for _, metric := range metrics {
 		switch metric {
 		case "gluster_brick":
@@ -83,7 +83,7 @@ func InitGluterMetrics(configPath string, metrics []string) error {
 				go func(m glusterMetric, gi glusterutils.GInterface) {
 					for {
 						// exporter's config will have proper Cluster ID set
-						clusterID = exporterConf.GlusterClusterID
+						clusterID = clusterLabel
 						err := m.fn(gi)
 						interval := defaultInterval
 						if collectorConf.SyncInterval > 0 {
