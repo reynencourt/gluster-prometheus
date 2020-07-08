@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -29,16 +30,31 @@ func getDefaultGlusterdDir(mgmt string) string {
 	return defaultGlusterd1Workdir
 }
 
-func InitGluterMetrics(configPath string) error {
-	registerMetric("gluster_brick", brickUtilization)
-	registerMetric("gluster_brick_status", brickStatus)
-	registerMetric("gluster_peer_counts", peerCounts)
-	registerMetric("gluster_peer_info", peerInfo)
-	registerMetric("gluster_ps", ps)
-	registerMetric("gluster_volume_heal", healCounts)
-	registerMetric("gluster_volume_profile", profileInfo)
-	registerMetric("gluster_volume_counts", volumeCounts)
-	registerMetric("gluster_volume_status", volumeInfo)
+func InitGluterMetrics(configPath string, metrics []string) error {
+	for _, metric := range metrics {
+		switch metric {
+		case "gluster_brick":
+			registerMetric("gluster_brick", brickUtilization)
+		case "gluster_brick_status":
+			registerMetric("gluster_brick_status", brickStatus)
+		case "gluster_peer_counts":
+			registerMetric("gluster_peer_counts", peerCounts)
+		case "gluster_peer_info":
+			registerMetric("gluster_peer_info", peerInfo)
+		case "gluster_ps":
+			registerMetric("gluster_ps", ps)
+		case "gluster_volume_heal":
+			registerMetric("gluster_volume_heal", healCounts)
+		case "gluster_volume_profile":
+			registerMetric("gluster_volume_profile", profileInfo)
+		case "gluster_volume_counts":
+			registerMetric("gluster_volume_counts", volumeCounts)
+		case "gluster_volume_status":
+			registerMetric("gluster_volume_status", volumeInfo)
+		default:
+			return errors.New(fmt.Sprintf("metric '%s' not found", metric))
+		}
+	}
 
 	f, err := os.Stat(configPath)
 	if err != nil {
