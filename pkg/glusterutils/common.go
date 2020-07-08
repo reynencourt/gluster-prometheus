@@ -3,8 +3,8 @@ package glusterutils
 import (
 	"time"
 
-	"github.com/gluster/gluster-prometheus/gluster-exporter/conf"
 	"github.com/gluster/glusterd2/pkg/restclient"
+	"github.com/reynencourt/gluster-prometheus/pkg/conf"
 )
 
 func initRESTClient(config *conf.GConfig) (*restclient.Client, error) {

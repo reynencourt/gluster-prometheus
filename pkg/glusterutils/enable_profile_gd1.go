@@ -1,7 +1,7 @@
 package glusterutils
 
 import (
-	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils/glusterconsts"
 	log "github.com/sirupsen/logrus"
 )
 

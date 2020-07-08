@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gluster/gluster-prometheus/gluster-exporter/conf"
-	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
+	"github.com/reynencourt/gluster-prometheus/pkg/conf"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils/glusterconsts"
 )
 
 var (

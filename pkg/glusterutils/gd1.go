@@ -3,7 +3,7 @@ package glusterutils
 import (
 	"encoding/xml"
 
-	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils/glusterconsts"
 
 	"fmt"
 	"os/exec"

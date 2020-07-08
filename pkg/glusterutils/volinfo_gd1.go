@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils/glusterconsts"
 )
 
 // VolumeInfo returns gluster vol info (glusterd)

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gluster/gluster-prometheus/gluster-exporter/conf"
+	"github.com/reynencourt/gluster-prometheus/pkg/conf"
 )
 
 // GCache is a wrapper around 'GInterface' object
