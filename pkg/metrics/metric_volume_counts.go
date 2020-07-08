@@ -156,7 +156,3 @@ func volumeCounts(gluster glusterutils.GInterface) error {
 	}, float64(volCreatedCount))
 	return nil
 }
-
-func init() {
-	main.registerMetric("gluster_volume_counts", volumeCounts)
-}
