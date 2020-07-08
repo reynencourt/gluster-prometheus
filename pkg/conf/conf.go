@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils/glusterconsts"
 )
 
 // GConfig represents Glusterd1/Glusterd2 configurations
