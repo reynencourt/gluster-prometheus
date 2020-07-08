@@ -1,0 +1,111 @@
+package metrics
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/reynencourt/gluster-prometheus/pkg/glusterutils"
+	log "github.com/sirupsen/logrus"
+)
+
+var (
+	peerCountMetricLabels = []MetricLabel{
+		{
+			Name: "instance",
+			Help: "Hostname of the gluster-prometheus instance providing this metric",
+		},
+	}
+	peerSCMetricLabels = []MetricLabel{
+		{
+			Name: "instance",
+			Help: "Hostname of the gluster-prometheus instance providing this metric",
+		},
+		{
+			Name: "hostname",
+			Help: "Hostname of the peer for which data is collected",
+		},
+		{
+			Name: "uuid",
+			Help: "Uuid of the peer for which data is collected",
+		},
+	}
+
+	peerGaugeVecs = make(map[string]*ExportedGaugeVec)
+
+	glusterPeerCount = registerExportedGaugeVec(Metric{
+		Namespace: "gluster",
+		Name:      "peer_count",
+		Help:      "Number of peers in cluster",
+		Labels:    peerCountMetricLabels,
+	}, &peerGaugeVecs)
+
+	glusterPeerStatus = registerExportedGaugeVec(Metric{
+		Namespace: "gluster",
+		Name:      "peer_status",
+		Help:      "Peer status info",
+		Labels:    peerSCMetricLabels,
+	}, &peerGaugeVecs)
+
+	glusterPeerConnected = registerExportedGaugeVec(Metric{
+		Namespace: "gluster",
+		Name:      "peer_connected",
+		Help:      "Peer connection status",
+		Labels:    peerSCMetricLabels,
+	}, &peerGaugeVecs)
+)
+
+func peerInfo(gluster glusterutils.GInterface) (err error) {
+	// Reset all vecs to not export stale information
+	for _, gaugeVec := range peerGaugeVecs {
+		gaugeVec.RemoveStaleMetrics()
+	}
+
+	var peerID string
+
+	if gluster != nil {
+		if peerID, err = gluster.LocalPeerID(); err != nil {
+			return
+		}
+	}
+
+	peers, err := gluster.Peers()
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"peer": peerID}).Debug("[Gluster Peers] Error:", err)
+		return err
+	}
+
+	fqdn := "n/a"
+	for _, peer := range peers {
+		if peer.ID == peerID {
+			// TODO: figure out which value of PeerAddresses may
+			// be hostname -- or resolve ip ourselves
+			fqdn = peer.PeerAddresses[0]
+		}
+	}
+
+	peerCountLabels := prometheus.Labels{
+		"instance": fqdn,
+	}
+
+	peerGaugeVecs[glusterPeerCount].Set(peerCountLabels, float64(len(peers)))
+
+	var connected int
+	for _, peer := range peers {
+		peerSCLabels := prometheus.Labels{
+			"instance": fqdn,
+			"hostname": peer.PeerAddresses[0],
+			"uuid":     peer.ID,
+		}
+		if peer.Online {
+			connected = 1
+		} else {
+			connected = 0
+		}
+		// Only update glusterPeerStatus when we retrieved a
+		// non-negative peer state, i.e. we're running with the GD1
+		// backend.
+		if peer.Gd1State > -1 {
+			peerGaugeVecs[glusterPeerStatus].Set(peerSCLabels, float64(peer.Gd1State))
+		}
+		peerGaugeVecs[glusterPeerConnected].Set(peerSCLabels, float64(connected))
+	}
+	return nil
+}
