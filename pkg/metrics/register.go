@@ -17,7 +17,9 @@ type glusterMetric struct {
 	fn   func(glusterutils.GInterface) error
 }
 
+var stopCh = make(chan struct{}, 0)
 var glusterMetrics []glusterMetric
+var gluster glusterutils.GInterface
 
 func registerMetric(name string, fn func(glusterutils.GInterface) error) {
 	glusterMetrics = append(glusterMetrics, glusterMetric{name: name, fn: fn})
@@ -31,7 +33,6 @@ func getDefaultGlusterdDir(mgmt string) string {
 }
 
 func InitGluterMetrics(clusterLabel string, configPath string, metrics []string) error {
-	// exporter's config will have proper Cluster ID set
 	clusterID = clusterLabel
 
 	for _, metric := range metrics {
@@ -78,21 +79,33 @@ func InitGluterMetrics(clusterLabel string, configPath string, metrics []string)
 			getDefaultGlusterdDir(exporterConf.GlusterMgmt)
 	}
 
-	gluster := glusterutils.MakeGluster(exporterConf)
+	gluster = glusterutils.MakeGluster(exporterConf)
+
+	return nil
+}
+
+// CollectMetrics collects all the registered metrics
+func CollectMetrics(stopChannel chan struct{}) error {
+	stopCh = stopChannel
 
 	for _, m := range glusterMetrics {
-		// Check if there is some specific conf
-		//collectorConf, ok := exporterConf.CollectorsConf[m.name]
 		go func(m glusterMetric, gi glusterutils.GInterface) {
 			for {
-				err := m.fn(gi)
-				interval := defaultInterval
-				if err != nil {
-					logrus.WithError(err).WithFields(logrus.Fields{
-						"name": m.name,
-					}).Debug("failed to export metric")
+				select {
+				default:
+					err := m.fn(gi)
+					interval := defaultInterval
+					if err != nil {
+						logrus.WithError(err).WithFields(logrus.Fields{
+							"name": m.name,
+						}).Debug("failed to export metric")
+					}
+					time.Sleep(time.Second * interval)
+				case <-stopCh:
+					logrus.Infof("Stopping metric '%s'", m.name)
+					return
 				}
-				time.Sleep(time.Second * interval)
+
 			}
 		}(m, gluster)
 	}
