@@ -31,6 +31,9 @@ func getDefaultGlusterdDir(mgmt string) string {
 }
 
 func InitGluterMetrics(clusterLabel string, configPath string, metrics []string) error {
+	// exporter's config will have proper Cluster ID set
+	clusterID = clusterLabel
+
 	for _, metric := range metrics {
 		switch metric {
 		case "gluster_brick":
@@ -78,27 +81,20 @@ func InitGluterMetrics(clusterLabel string, configPath string, metrics []string)
 	gluster := glusterutils.MakeGluster(exporterConf)
 
 	for _, m := range glusterMetrics {
-		if collectorConf, ok := exporterConf.CollectorsConf[m.name]; ok {
-			if !collectorConf.Disabled {
-				go func(m glusterMetric, gi glusterutils.GInterface) {
-					for {
-						// exporter's config will have proper Cluster ID set
-						clusterID = clusterLabel
-						err := m.fn(gi)
-						interval := defaultInterval
-						if collectorConf.SyncInterval > 0 {
-							interval = time.Duration(collectorConf.SyncInterval)
-						}
-						if err != nil {
-							logrus.WithError(err).WithFields(logrus.Fields{
-								"name": m.name,
-							}).Debug("failed to export metric")
-						}
-						time.Sleep(time.Second * interval)
-					}
-				}(m, gluster)
+		// Check if there is some specific conf
+		//collectorConf, ok := exporterConf.CollectorsConf[m.name]
+		go func(m glusterMetric, gi glusterutils.GInterface) {
+			for {
+				err := m.fn(gi)
+				interval := defaultInterval
+				if err != nil {
+					logrus.WithError(err).WithFields(logrus.Fields{
+						"name": m.name,
+					}).Debug("failed to export metric")
+				}
+				time.Sleep(time.Second * interval)
 			}
-		}
+		}(m, gluster)
 	}
 
 	if len(glusterMetrics) == 0 {
