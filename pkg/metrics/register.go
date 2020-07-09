@@ -17,7 +17,6 @@ type glusterMetric struct {
 	fn   func(glusterutils.GInterface) error
 }
 
-var stopCh = make(chan struct{}, 0)
 var glusterMetrics []glusterMetric
 var gluster glusterutils.GInterface
 
@@ -85,8 +84,8 @@ func InitGluterMetrics(clusterLabel string, configPath string, metrics []string)
 }
 
 // CollectMetrics collects all the registered metrics
-func CollectMetrics(stopChannel chan struct{}) error {
-	stopCh = stopChannel
+func CollectMetrics() (chan struct{}, error) {
+	stopCh := make(chan struct{}, 0)
 
 	for _, m := range glusterMetrics {
 		go func(m glusterMetric, gi glusterutils.GInterface) {
@@ -98,11 +97,11 @@ func CollectMetrics(stopChannel chan struct{}) error {
 					if err != nil {
 						logrus.WithError(err).WithFields(logrus.Fields{
 							"name": m.name,
-						}).Debug("failed to export metric")
+						}).Debug("[gluster-prometheus] failed to export metric")
 					}
 					time.Sleep(time.Second * interval)
 				case <-stopCh:
-					logrus.Infof("Stopping metric '%s'", m.name)
+					logrus.Debugf("[gluster-prometheus] Stopping metric '%s'", m.name)
 					return
 				}
 
@@ -111,8 +110,8 @@ func CollectMetrics(stopChannel chan struct{}) error {
 	}
 
 	if len(glusterMetrics) == 0 {
-		return errors.New("no Metrics registered")
+		return nil, errors.New("no Metrics registered")
 	}
 
-	return nil
+	return stopCh, nil
 }
