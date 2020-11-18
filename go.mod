@@ -19,3 +19,10 @@ require (
 	github.com/stretchr/testify v1.6.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
+
+replace (
+	github.com/prometheus/client_model => github.com/prometheus/client_model v0.2.0
+    github.com/prometheus/common => github.com/prometheus/common v0.14.0
+    github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.8.0
+    github.com/prometheus/prometheus => github.com/prometheus/client_golang v1.8.2-0.20200724121523-657ba532e42f // indirect
+)
